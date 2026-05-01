@@ -1887,6 +1887,6 @@ namespace Robust.Shared
          */
 
         public static readonly CVarDef<string> LocCultureName =
-            CVarDef.Create("loc.culture_name", "en-US", CVar.ARCHIVE);
+            CVarDef.Create("loc.culture_name", "fr-FR", CVar.ARCHIVE);
     }
 }
