@@ -16,8 +16,8 @@ zzzz-subject-pronoun = { GENDER($ent) ->
 zzzz-object-pronoun = { GENDER($ent) ->
     [male] lui
     [female] elle
-    [epicene] eux
-   *[neuter] le
+    [epicene] ils
+   *[neuter] il
    }
 
 # Used internally by the DAT-OBJ() function.
@@ -25,7 +25,7 @@ zzzz-object-pronoun = { GENDER($ent) ->
 # (e.g., "to him," "for her")
 zzzz-dat-object = { GENDER($ent) ->
     [male] lui
-    [female] lui
+    [female] elle
     [epicene] leur
    *[neuter] lui
    }
@@ -35,7 +35,7 @@ zzzz-dat-object = { GENDER($ent) ->
 # e.g., "у него" (Russian), "seines Vaters" (German).
 zzzz-genitive = { GENDER($ent) ->
     [male] son
-    [female] son
+    [female] sa
     [epicene] leur
    *[neuter] son
    }
@@ -43,7 +43,7 @@ zzzz-genitive = { GENDER($ent) ->
 # Used internally by the POSS-PRONOUN() function.
 zzzz-possessive-pronoun = { GENDER($ent) ->
     [male] le sien
-    [female] le sien
+    [female] la sienne
     [epicene] le leur
    *[neuter] le sien
    }
@@ -51,7 +51,7 @@ zzzz-possessive-pronoun = { GENDER($ent) ->
 # Used internally by the POSS-ADJ() function.
 zzzz-possessive-adjective = { GENDER($ent) ->
     [male] son
-    [female] son
+    [female] sa
     [epicene] leur
    *[neuter] son
    }
