@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using JetBrains.Annotations;
 using OpenTK.Audio.OpenAL;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -44,6 +45,16 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private readonly SharedMapSystem _maps = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+
+    /// <summary>
+    /// An optional method that, if provided, will override the behavior of <see cref="GetOcclusion"/>.
+    /// Contains the same parameters in the same order as the method it overrides.
+    /// </summary>
+    /// <remarks>
+    /// This event only supports a single invocation target.
+    /// </remarks>
+    [PublicAPI]
+    public event Func<MapCoordinates, Vector2, float, EntityUid?, float>? GetOcclusionOverride;
 
     /// <summary>
     /// Per-tick cache of relevant streams.
@@ -434,6 +445,14 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     public float GetOcclusion(MapCoordinates listener, Vector2 delta, float distance, EntityUid? ignoredEnt = null)
     {
+        // If content has defined a custom occlusion method, use that instead.
+        if (GetOcclusionOverride is not null)
+        {
+            // There can only be one occlusion override defined.
+            DebugTools.Assert(GetOcclusionOverride.HasSingleTarget, $"Event {nameof(GetOcclusionOverride)} has multiple invocation targets. This is not permitted.");
+            return GetOcclusionOverride.Invoke(listener, delta, distance, ignoredEnt);
+        }
+
         float occlusion = 0;
 
         if (distance > 0.1)
