@@ -88,7 +88,6 @@ namespace Robust.Shared.ContentPack
             public string SystemAssemblyName = default!;
             public HashSet<VerifierError> AllowedVerifierErrors = default!;
             public List<string> WhitelistedNamespaces = default!;
-            public List<string> AllowedAssemblyPrefixes = default!;
             public Dictionary<string, Dictionary<string, TypeConfig>> Types = default!;
         }
 

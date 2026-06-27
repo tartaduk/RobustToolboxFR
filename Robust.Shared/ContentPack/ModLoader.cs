@@ -93,23 +93,19 @@ namespace Robust.Shared.ContentPack
         {
             var sw = Stopwatch.StartNew();
             Sawmill.Debug("LOADING modules");
-            var files = new Dictionary<string, (ResPath Path, MemoryStream data, string[] references)>();
+            var files = new Dictionary<string, (ResPath Path, string[] references)>();
 
             // Find all modules we want to load.
             foreach (var fullPath in paths)
             {
                 using var asmFile = _res.ContentFileRead(fullPath);
-                var ms = new MemoryStream();
-                asmFile.CopyTo(ms);
-
-                ms.Position = 0;
-                var refData = GetAssemblyReferenceData(ms);
+                var refData = GetAssemblyReferenceData(asmFile);
                 if (refData == null)
                     continue;
 
                 var (asmRefs, asmName) = refData.Value;
 
-                if (!files.TryAdd(asmName, (fullPath, ms, asmRefs)))
+                if (!files.TryAdd(asmName, (fullPath, asmRefs)))
                 {
                     Sawmill.Error("Found multiple modules with the same assembly name " +
                                   $"'{asmName}', A: {files[asmName].Path}, B: {fullPath}.");
@@ -126,10 +122,10 @@ namespace Robust.Shared.ContentPack
 
                 Parallel.ForEach(files, pair =>
                 {
-                    var (name, (_, data, _)) = pair;
+                    var (name, (path, _)) = pair;
 
-                    data.Position = 0;
-                    if (!typeChecker.CheckAssembly(data, resolver))
+                    using var stream = _res.ContentFileRead(path);
+                    if (!typeChecker.CheckAssembly(stream, resolver))
                     {
                         throw new TypeCheckFailedException($"Assembly {name} failed type checks.");
                     }
@@ -141,15 +137,14 @@ namespace Robust.Shared.ContentPack
             var nodes = TopologicalSort.FromBeforeAfter(
                 files,
                 kv => kv.Key,
-                kv => kv.Value,
+                kv => kv.Value.Path,
                 _ => Array.Empty<string>(),
                 kv => kv.Value.references,
                 allowMissing: true); // missing refs would be non-content assemblies so allow that.
 
             // Actually load them in the order they depend on each other.
-            foreach (var item in TopologicalSort.Sort(nodes))
+            foreach (var path in TopologicalSort.Sort(nodes))
             {
-                var (path, memory, _) = item;
                 Sawmill.Debug($"Loading module: '{path}'");
                 try
                 {
@@ -161,9 +156,9 @@ namespace Robust.Shared.ContentPack
                     }
                     else
                     {
-                        memory.Position = 0;
+                        using var assemblyStream = _res.ContentFileRead(path);
                         using var symbolsStream = _res.ContentFileReadOrNull(path.WithExtension("pdb"));
-                        LoadGameAssembly(memory, symbolsStream, skipVerify: true);
+                        LoadGameAssembly(assemblyStream, symbolsStream, skipVerify: true);
                     }
                 }
                 catch (Exception e)
@@ -179,7 +174,7 @@ namespace Robust.Shared.ContentPack
 
         private (string[] refs, string name)? GetAssemblyReferenceData(Stream stream)
         {
-            using var reader = ModLoader.MakePEReader(stream, leaveOpen: true);
+            using var reader = ModLoader.MakePEReader(stream);
             var metaReader = reader.GetMetadataReader();
 
             var name = metaReader.GetString(metaReader.GetAssemblyDefinition().Name);
