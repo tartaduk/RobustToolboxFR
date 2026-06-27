@@ -13,7 +13,7 @@ namespace Robust.Shared.ContentPack
     {
         /// <summary>
         /// The root path of this provider.
-        /// Can be null if it's a virtual provider or the path is protected (e.g. on the client).
+        /// Can be null if it's a virtual provider.
         /// </summary>
         string? RootDir { get; }
 

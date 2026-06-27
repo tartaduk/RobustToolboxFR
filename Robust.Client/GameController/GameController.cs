@@ -387,7 +387,7 @@ namespace Robust.Client
 
             _prof.Initialize();
 
-            _resManager.Initialize(Options.LoadConfigAndUserData ? userDataDir : null, hideUserDataDir: true);
+            _resManager.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions)

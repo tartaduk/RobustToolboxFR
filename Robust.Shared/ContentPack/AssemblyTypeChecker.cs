@@ -131,16 +131,6 @@ namespace Robust.Shared.ContentPack
                 return false;
             }
 
-#pragma warning disable RA0004
-            var loadedConfig = _config.Result;
-#pragma warning restore RA0004
-
-            if (!loadedConfig.AllowedAssemblyPrefixes.Any(allowedNamePrefix => asmName.StartsWith(allowedNamePrefix)))
-            {
-                _sawmill.Error($"Assembly name '{asmName}' is not allowed for a content assembly");
-                return false;
-            }
-
             if (VerifyIL)
             {
                 if (!DoVerifyIL(asmName, resolver, peReader, reader))
@@ -188,6 +178,10 @@ namespace Robust.Shared.ContentPack
             {
                 return true;
             }
+
+#pragma warning disable RA0004
+            var loadedConfig = _config.Result;
+#pragma warning restore RA0004
 
             var badRefs = new ConcurrentBag<EntityHandle>();
 

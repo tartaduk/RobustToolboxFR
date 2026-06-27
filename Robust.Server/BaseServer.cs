@@ -297,7 +297,7 @@ namespace Robust.Server
                 : null;
 
             // Set up the VFS
-            _resources.Initialize(dataDir, hideUserDataDir: false);
+            _resources.Initialize(dataDir);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
