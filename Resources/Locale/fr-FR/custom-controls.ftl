@@ -3,6 +3,7 @@
 entity-spawn-window-title = Panneau de création d'entités
 entity-spawn-window-replace-button-text = Remplacer
 entity-spawn-window-override-menu-tooltip = Remplacer le placement
+entity-spawn-window-no-description = Aucune description
 
 ## TileSpawnWindow
 
