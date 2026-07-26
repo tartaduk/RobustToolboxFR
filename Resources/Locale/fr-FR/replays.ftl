@@ -9,6 +9,9 @@ cmd-replay-pause-help = replay_pause
 cmd-replay-toggle-desc = Reprend ou met en pause la lecture du replay.
 cmd-replay-toggle-help = replay_toggle
 
+cmd-replay-toggle-screenshot-mode-desc = Active ou désactive le mode capture d'écran pour les replays, en masquant le panneau de contrôle du replay.
+cmd-replay-toggle-screenshot-mode-help = replay_toggle_screenshot_mode
+
 cmd-replay-stop-desc = Arrête et décharge un replay.
 cmd-replay-stop-help = replay_stop
 
