@@ -451,6 +451,8 @@ namespace Robust.Client.Graphics.Clyde
             var lastPower = float.NaN;
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
             var lastSoftness = float.NaN;
+            var lastFalloff = float.NaN;
+            var lastCurveFactor = float.NaN;
             Texture? lastMask = null;
 
             using (_prof.Group("Draw Lights"))
@@ -464,12 +466,7 @@ namespace Robust.Client.Graphics.Clyde
                     if (component.Mask != null)
                     {
                         mask = component.Mask;
-                        rotation = component.Rotation;
-
-                        if (component.MaskAutoRotate)
-                        {
-                            rotation += rot;
-                        }
+                        rotation = SharedPointLightSystem.GetMaskWorldRotation(component, rot);
                     }
 
                     var maskTexture = mask ?? _stockTextureWhite;
@@ -502,6 +499,18 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         lastSoftness = component.Softness;
                         lightShader.SetUniformMaybe("lightSoftness", lastSoftness);
+                    }
+
+                    if (!MathHelper.CloseToPercent(lastFalloff, component.Falloff))
+                    {
+                        lastFalloff = component.Falloff;
+                        lightShader.SetUniformMaybe("lightFalloff", lastFalloff);
+                    }
+
+                    if (!MathHelper.CloseToPercent(lastCurveFactor, component.CurveFactor))
+                    {
+                        lastCurveFactor = component.CurveFactor;
+                        lightShader.SetUniformMaybe("lightCurveFactor", lastCurveFactor);
                     }
 
                     lightShader.SetUniformMaybe("lightCenter", lightPos);
@@ -559,7 +568,7 @@ namespace Robust.Client.Graphics.Clyde
             int shadowCastingCount,
             EntityQuery<TransformComponent> xforms,
             Box2 worldAABB) state,
-            in ComponentTreeEntry<PointLightComponent> value)
+            in ComponentTreeEntry<SharedPointLightComponent> value)
         {
             ref var count = ref state.count;
             ref var shadowCount = ref state.shadowCastingCount;
@@ -583,7 +592,7 @@ namespace Robust.Client.Graphics.Clyde
                 shadowCount++;
 
             var distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared();
-            state.clyde._lightsToRenderList[count++] = (light, lightPos, distanceSquared, rot);
+            state.clyde._lightsToRenderList[count++] = ((PointLightComponent)light, lightPos, distanceSquared, rot);
 
             return true;
         }

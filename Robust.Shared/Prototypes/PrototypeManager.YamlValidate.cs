@@ -39,7 +39,14 @@ public partial class PrototypeManager
             }
 
             var yamlStream = new YamlStream();
-            yamlStream.Load(reader);
+            try
+            {
+                yamlStream.Load(reader);
+            }
+            catch (Exception e)
+            {
+                throw new PrototypeLoadException($"Error loading file: '{resourcePath}'\n{e}");
+            }
 
             foreach (var doc in yamlStream.Documents)
             {
@@ -77,7 +84,7 @@ public partial class PrototypeManager
             }
         }
 
-        var ctx = new YamlValidationContext();
+        var ctx = new YamlValidationContext(_serializationManager);
         var errors = new List<ErrorNode>();
         foreach (var (type, instances) in prototypes)
         {
