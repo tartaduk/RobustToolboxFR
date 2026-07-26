@@ -2,6 +2,7 @@ input-key-Escape = Échap
 input-key-Control = Ctrl
 input-key-Shift = Maj
 input-key-Alt = Alt
+input-key-Alt-mac = Alt
 input-key-Menu = Menu
 input-key-F1 = F1
 input-key-F2 = F2
@@ -67,6 +68,8 @@ input-key-MouseButton6 = Souris 6
 input-key-MouseButton7 = Souris 7
 input-key-MouseButton8 = Souris 8
 input-key-MouseButton9 = Souris 9
+input-key-CapsLock = Verr. Maj
+input-key-ScrollLock = Arrêt défil
 
 input-key-LSystem-win = Win gauche
 input-key-RSystem-win = Win droit
