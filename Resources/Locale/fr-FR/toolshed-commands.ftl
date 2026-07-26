@@ -428,3 +428,7 @@ command-description-cmd-info =
     En soi, cela signifie qu'il affichera le message d'aide de la commande.
 command-description-comp-rm =
     Supprime le composant donné de l'entité.
+
+command-description-overlay-toggle = Activer ou désactiver une superposition
+command-description-overlay-add = Ajouter une superposition (si elle n'existe pas déjà)
+command-description-overlay-remove = Supprimer une superposition
