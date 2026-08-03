@@ -1,79 +1,79 @@
 ﻿# Used internally by the THE() function.
 zzzz-the = { PROPER($ent) ->
-    *[false] le { $ent }
+    *[false] the { $ent }
      [true] { $ent }
     }
 
 # Used internally by the SUBJECT() function.
 zzzz-subject-pronoun = { GENDER($ent) ->
-    [male] il
-    [female] elle
-    [epicene] ils
-   *[neuter] il
+    [male] he
+    [female] she
+    [epicene] they
+   *[neuter] it
    }
 
 # Used internally by the OBJECT() function.
 zzzz-object-pronoun = { GENDER($ent) ->
-    [male] lui
-    [female] elle
-    [epicene] ils
-   *[neuter] il
+    [male] him
+    [female] her
+    [epicene] them
+   *[neuter] it
    }
 
 # Used internally by the DAT-OBJ() function.
 # Not used in en-US. Created to support other languages.
 # (e.g., "to him," "for her")
 zzzz-dat-object = { GENDER($ent) ->
-    [male] lui
-    [female] elle
-    [epicene] leur
-   *[neuter] lui
+    [male] him
+    [female] her
+    [epicene] them
+   *[neuter] it
    }
 
 # Used internally by the GENITIVE() function.
 # Not used in en-US. Created to support other languages.
 # e.g., "у него" (Russian), "seines Vaters" (German).
 zzzz-genitive = { GENDER($ent) ->
-    [male] son
-    [female] sa
-    [epicene] leur
-   *[neuter] son
+    [male] his
+    [female] her
+    [epicene] their
+   *[neuter] its
    }
 
 # Used internally by the POSS-PRONOUN() function.
 zzzz-possessive-pronoun = { GENDER($ent) ->
-    [male] le sien
-    [female] la sienne
-    [epicene] le leur
-   *[neuter] le sien
+    [male] his
+    [female] hers
+    [epicene] theirs
+   *[neuter] its
    }
 
 # Used internally by the POSS-ADJ() function.
 zzzz-possessive-adjective = { GENDER($ent) ->
-    [male] son
-    [female] sa
-    [epicene] leur
-   *[neuter] son
+    [male] his
+    [female] her
+    [epicene] their
+   *[neuter] its
    }
 
 # Used internally by the REFLEXIVE() function.
 zzzz-reflexive-pronoun = { GENDER($ent) ->
-    [male] lui-même
-    [female] elle-même
-    [epicene] eux-mêmes
-   *[neuter] lui-même
+    [male] himself
+    [female] herself
+    [epicene] themselves
+   *[neuter] itself
    }
 
 # Used internally by the CONJUGATE-BE() function.
 zzzz-conjugate-be = { GENDER($ent) ->
-    [epicene] sont
-   *[other] est
+    [epicene] are
+   *[other] is
    }
 
 # Used internally by the CONJUGATE-HAVE() function.
 zzzz-conjugate-have = { GENDER($ent) ->
-    [epicene] ont
-   *[other] a
+    [epicene] have
+   *[other] has
    }
 
 # Used internally by the CONJUGATE-BASIC() function.
