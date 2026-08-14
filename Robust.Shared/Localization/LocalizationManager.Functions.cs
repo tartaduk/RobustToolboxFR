@@ -87,7 +87,7 @@ namespace Robust.Shared.Localization
         {
             ILocValue val = args.Args[0];
             if (val.Value == null)
-                return new LocValueString("an");
+                return new LocValueString("un");
 
             string? word;
             string? input;
@@ -106,8 +106,8 @@ namespace Robust.Shared.Localization
             if (String.IsNullOrEmpty(input))
                 return new LocValueString("");
 
-            var a = new LocValueString("a");
-            var an = new LocValueString("an");
+            var a = new LocValueString("un");
+            var an = new LocValueString("un");
 
             var m = RegexWordMatch.Match(input);
             if (m.Success)
