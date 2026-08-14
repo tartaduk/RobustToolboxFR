@@ -39,7 +39,7 @@ namespace Robust.Shared.Localization
             AddCtxFunction(bundle, "THE", FuncThe);
 
             // Misc
-            AddCtxFunction(bundle, "ATTRIB", args => FuncAttrib(bundle, args));
+            AddCtxFunction(bundle, "ATTRIB", (args, ctx) => FuncAttrib(bundle, args, ctx));
             AddCtxFunction(bundle, "CAPITALIZE", FuncCapitalize);
             AddCtxFunction(bundle, "INDEFINITE", FuncIndefinite);
         }
@@ -47,7 +47,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the name of the entity passed in, prepended with "the" if it is not a proper noun.
         /// </summary>
-        private ILocValue FuncThe(LocArgs args)
+        private ILocValue FuncThe(LocArgs args, LocContext ctx)
         {
             return new LocValueString(GetString("zzzz-the", ("ent", args.Args[0])));
         }
@@ -55,9 +55,9 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the string passed in, with the first letter capitalized.
         /// </summary>
-        private ILocValue FuncCapitalize(LocArgs args)
+        private ILocValue FuncCapitalize(LocArgs args, LocContext ctx)
         {
-            var input = args.Args[0].Format(new LocContext());
+            var input = args.Args[0].Format(ctx);
             if (!String.IsNullOrEmpty(input))
                 return new LocValueString(input[0].ToString().ToUpper() + input.Substring(1));
             else return new LocValueString("");
@@ -83,7 +83,7 @@ namespace Robust.Shared.Localization
 
         private static readonly char[] IndefVowels = { 'a', 'e', 'i', 'o', 'u' };
 
-        private ILocValue FuncIndefinite(LocArgs args)
+        private ILocValue FuncIndefinite(LocArgs args, LocContext ctx)
         {
             ILocValue val = args.Args[0];
             if (val.Value == null)
@@ -100,26 +100,53 @@ namespace Robust.Shared.Localization
             }
             else
             {
-                input = val.Format(new LocContext());
+                input = val.Format(ctx);
             }
 
             if (String.IsNullOrEmpty(input))
                 return new LocValueString("");
 
-            var a = new LocValueString("un");
-            var an = new LocValueString("un");
+            // Get the culture for locale-specific handling
+            var culture = ctx.Culture.TwoLetterISOLanguageName;
 
+            // Extract first word
             var m = RegexWordMatch.Match(input);
-            if (m.Success)
+            if (!m.Success)
+                return new LocValueString("");
+
+            word = m.Groups[0].Value;
+            var wordi = word.ToLower();
+
+            // French handling
+            if (culture == "fr")
             {
-                word = m.Groups[0].Value;
-            }
-            else
-            {
-                return an;
+                // Check entity's grammatical gender first if it's an EntityUid
+                if (val.Value is EntityUid entityUid)
+                {
+                    if (_entMan.TryGetComponent(entityUid, out GrammarComponent? grammar) && grammar.Gender.HasValue)
+                    {
+                        return new LocValueString(grammar.Gender.Value == Robust.Shared.Enums.Gender.Female ? "une" : "un");
+                    }
+
+                    if (TryGetEntityLocAttrib(entityUid, "gender", out var gender))
+                    {
+                        return new LocValueString(gender.ToLowerInvariant() == "female" ? "une" : "un");
+                    }
+                }
+
+                // Fallback: heuristic - nouns ending in 'e' are usually feminine, except known masculine endings
+                // Check masculine endings first (all end in 'e'), then default to feminine for 'e'
+                var masculineEndings = new[] { "ée", "ie", "te", "re", "pe", "le", "me", "ne", "se", "be", "ve", "ze", "ge", "che", "phe", "the", "gue" };
+                bool isMasculine = masculineEndings.Any(wordi.EndsWith);
+                var isFeminine = wordi.EndsWith("e") && !isMasculine;
+
+                return new LocValueString(isFeminine ? "une" : "un");
             }
 
-            var wordi = word.ToLower();
+            // English/default handling
+            var a = new LocValueString("a");
+            var an = new LocValueString("an");
+
             if (IndefExceptions.Any(anword => wordi.StartsWith(anword)))
             {
                 return an;
@@ -134,7 +161,7 @@ namespace Robust.Shared.Localization
             }
 
             if (IndefRegexFjo.Match(word)
-                .Success)
+            .Success)
             {
                 return an;
             }
@@ -166,7 +193,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the gender of the entity passed in; either Male, Female, Neuter or Epicene.
         /// </summary>
-        private ILocValue FuncGender(LocArgs args)
+        private ILocValue FuncGender(LocArgs args, LocContext ctx)
         {
             if (args.Args.Count < 1) return new LocValueString(nameof(Gender.Neuter));
 
@@ -190,7 +217,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the respective subject pronoun (he, she, they, it) for the entity's gender.
         /// </summary>
-        private ILocValue FuncSubject(LocArgs args)
+        private ILocValue FuncSubject(LocArgs args, LocContext ctx)
         {
             return new LocValueString(GetString("zzzz-subject-pronoun", ("ent", args.Args[0])));
         }
@@ -198,7 +225,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the respective object pronoun (him, her, them, it) for the entity's gender.
         /// </summary>
-        private ILocValue FuncObject(LocArgs args)
+        private ILocValue FuncObject(LocArgs args, LocContext ctx)
         {
             return new LocValueString(GetString("zzzz-object-pronoun", ("ent", args.Args[0])));
         }
@@ -208,7 +235,7 @@ namespace Robust.Shared.Localization
         /// This method is intended for languages with a dative case, where indirect objects
         /// (e.g., "to him," "for her") require specific forms. Not applicable for en-US locale.
         /// </summary>
-        private ILocValue FuncDatObj(LocArgs args)
+        private ILocValue FuncDatObj(LocArgs args, LocContext ctx)
         {
             return new LocValueString(GetString("zzzz-dat-object", ("ent", args.Args[0])));
         }
@@ -217,7 +244,7 @@ namespace Robust.Shared.Localization
         /// Returns the respective genitive form (pronoun or possessive adjective) for the entity's gender.
         /// This is used in languages with a genitive case to indicate possession or related relationships,
         /// e.g., "у него" (Russian), "seines Vaters" (German).
-        private ILocValue FuncGenitive(LocArgs args)
+        private ILocValue FuncGenitive(LocArgs args, LocContext ctx)
         {
             return new LocValueString(GetString("zzzz-genitive", ("ent", args.Args[0])));
         }
@@ -225,7 +252,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the respective possessive adjective (his, her, their, its) for the entity's gender.
         /// </summary>
-        private ILocValue FuncPossAdj(LocArgs args)
+        private ILocValue FuncPossAdj(LocArgs args, LocContext ctx)
         {
             return new LocValueString(GetString("zzzz-possessive-adjective", ("ent", args.Args[0])));
         }
@@ -233,7 +260,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the respective possessive pronoun (his, hers, theirs, its) for the entity's gender.
         /// </summary>
-        private ILocValue FuncPossPronoun(LocArgs args)
+        private ILocValue FuncPossPronoun(LocArgs args, LocContext ctx)
         {
             return new LocValueString(GetString("zzzz-possessive-pronoun", ("ent", args.Args[0])));
         }
@@ -241,7 +268,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the respective reflexive pronoun (himself, herself, themselves, itself) for the entity's gender.
         /// </summary>
-        private ILocValue FuncReflexive(LocArgs args)
+        private ILocValue FuncReflexive(LocArgs args, LocContext ctx)
         {
             return new LocValueString(GetString("zzzz-reflexive-pronoun", ("ent", args.Args[0])));
         }
@@ -249,7 +276,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the counter or measure word for the entity. Not used in English, common in East Asian languages.
         /// </summary>
-        private ILocValue FuncCounter(LocArgs args)
+        private ILocValue FuncCounter(LocArgs args, LocContext ctx)
         {
             if (args.Args.Count < 1) return new LocValueString(GetString("zzzz-counter-default"));
 
@@ -268,7 +295,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the respective conjugated form of "to be" (is for male/female/neuter, are for epicene) for the entity's gender.
         /// </summary>
-        private ILocValue FuncConjugateBe(LocArgs args)
+        private ILocValue FuncConjugateBe(LocArgs args, LocContext ctx)
         {
             return new LocValueString(GetString("zzzz-conjugate-be", ("ent", args.Args[0])));
         }
@@ -276,7 +303,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the respective conjugated form of "to have" (has for male/female/neuter, have for epicene) for the entity's gender.
         /// </summary>
-        private ILocValue FuncConjugateHave(LocArgs args)
+        private ILocValue FuncConjugateHave(LocArgs args, LocContext ctx)
         {
             return new LocValueString(GetString("zzzz-conjugate-have", ("ent", args.Args[0])));
         }
@@ -286,14 +313,14 @@ namespace Robust.Shared.Localization
         /// for he/she/it.
         /// e.g. run -> he runs/she runs/they run/it runs
         /// </summary>
-        private ILocValue FuncConjugateBasic(LocArgs args)
+        private ILocValue FuncConjugateBasic(LocArgs args, LocContext ctx)
         {
             var first = ((LocValueString)args.Args[1]).Value;
             var second = ((LocValueString)args.Args[2]).Value;
             return new LocValueString(GetString("zzzz-conjugate-basic", ("ent", args.Args[0]), ("first", first), ("second", second)));
         }
 
-        private ILocValue FuncAttrib(FluentBundle bundle, LocArgs args)
+        private ILocValue FuncAttrib(FluentBundle bundle, LocArgs args, LocContext ctx)
         {
             if (args.Args.Count < 2) return new LocValueString("other");
 
@@ -301,7 +328,7 @@ namespace Robust.Shared.Localization
             if (entity0.Value is EntityUid entity)
             {
                 ILocValue attrib0 = args.Args[1];
-                if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(bundle)), out var attrib))
+                if (TryGetEntityLocAttrib(entity, attrib0.Format(ctx), out var attrib))
                 {
                     return new LocValueString(attrib);
                 }
@@ -313,7 +340,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns whether the passed in entity's name is proper or not.
         /// </summary>
-        private ILocValue FuncProper(LocArgs args)
+        private ILocValue FuncProper(LocArgs args, LocContext ctx)
         {
             if (args.Args.Count < 1) return new LocValueString("false");
 
@@ -359,15 +386,21 @@ namespace Robust.Shared.Localization
             }
 
             var argStruct = new LocArgs(args, options);
-            return function.Invoke(argStruct).FluentFromVal(new LocContext(bundle));
+            var context = new LocContext(bundle);
+            return function.Invoke(argStruct, context).FluentFromVal(context);
         }
 
         public void AddFunction(CultureInfo culture, string name, LocFunction function)
         {
             var bundle = _contexts[culture];
 
-            bundle.AddFunctionOverriding(name, (args, options)
-                => CallFunction(function, bundle, args, options));
+            bundle.AddFunctionOverriding(name, (args, options) =>
+            {
+                var argStruct = new LocArgs(args.Select(a => a.ToLocValue()).ToArray(),
+                    options.ToDictionary(k => k.Key, v => v.Value.ToLocValue()));
+                var context = new LocContext(bundle);
+                return function.Invoke(argStruct, context).FluentFromVal(context);
+            });
         }
     }
 
