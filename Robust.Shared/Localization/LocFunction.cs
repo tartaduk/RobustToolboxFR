@@ -21,8 +21,7 @@ namespace Robust.Shared.Localization
     ///     Function signature runnable by localizations.
     /// </summary>
     /// <param name="args">Contains arguments and options passed to the function by the calling localization.</param>
-    /// <param name="ctx">Context containing the culture and bundle for locale-aware functions.</param>
-    public delegate ILocValue LocFunction(LocArgs args, LocContext ctx);
+    public delegate ILocValue LocFunction(LocArgs args);
 
     [PublicAPI]
     public readonly struct LocContext
